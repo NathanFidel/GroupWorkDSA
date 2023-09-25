@@ -10,7 +10,7 @@ public isolated client class Client {
     # + config - The configurations to be used when initializing the `connector` 
     # + serviceUrl - URL of the target service 
     # + return - An error if connector initialization failed 
-    public isolated function init(string serviceUrl, ConnectionConfig config =  {}) returns error? {
+    public isolated function init(ConnectionConfig config =  {}, string serviceUrl = "http://localhost:9090/") returns error? {
         http:ClientConfiguration httpClientConfig = {httpVersion: config.httpVersion, timeout: config.timeout, forwarded: config.forwarded, poolConfig: config.poolConfig, compression: config.compression, circuitBreaker: config.circuitBreaker, retryConfig: config.retryConfig, validation: config.validation};
         do {
             if config.http1Settings is ClientHttp1Settings {
@@ -37,68 +37,70 @@ public isolated client class Client {
         self.clientEp = httpEp;
         return;
     }
-    # Retrieve a list of all lecturers
     #
-    # + return - A list of all lecturers 
-    resource isolated function get lecturers() returns Lecturer[]|error {
-        string resourcePath = string `/lecturers`;
-        Lecturer[] response = check self.clientEp->get(resourcePath);
-        return response;
-    }
-    # Add a new lecturer
-    #
-    # + payload - New lecturer details
-    # + return - Successfully added a new lecturer 
-    resource isolated function post lecturers(NewLecturer payload) returns http:Response|error {
-        string resourcePath = string `/lecturers`;
+    # + return - Created 
+    resource isolated function post addTeacher(TeacherRecord payload) returns string|error {
+        string resourcePath = string `/addTeacher`;
         http:Request request = new;
         json jsonBody = payload.toJson();
         request.setPayload(jsonBody, "application/json");
-        http:Response response = check self.clientEp->post(resourcePath, request);
+        string response = check self.clientEp->post(resourcePath, request);
         return response;
     }
-    # Retrieve details of a specific lecturer
     #
-    # + return - Details of the specific lecturer 
-    resource isolated function get lecturers/[string staffNumber]() returns Lecturer|error {
-        string resourcePath = string `/lecturers/${getEncodedUri(staffNumber)}`;
-        Lecturer response = check self.clientEp->get(resourcePath);
+    # + return - Ok 
+    resource isolated function get getAllTeachers() returns TeacherRecord[]|error {
+        string resourcePath = string `/getAllTeachers`;
+        TeacherRecord[] response = check self.clientEp->get(resourcePath);
         return response;
     }
-    # Update an existing lecturer's information
     #
-    # + payload - Updated lecturer details
-    # + return - Successfully updated lecturer information 
-    resource isolated function put lecturers/[string staffNumber](Lecturer payload) returns http:Response|error {
-        string resourcePath = string `/lecturers/${getEncodedUri(staffNumber)}`;
+    # + return - Ok 
+    resource isolated function put updateTeacher(string employeeId, TeacherRecord payload) returns string|error {
+        string resourcePath = string `/updateTeacher`;
+        map<anydata> queryParam = {"employeeId": employeeId};
+        resourcePath = resourcePath + check getPathForQueryParam(queryParam);
         http:Request request = new;
         json jsonBody = payload.toJson();
         request.setPayload(jsonBody, "application/json");
-        http:Response response = check self.clientEp->put(resourcePath, request);
+        string response = check self.clientEp->put(resourcePath, request);
         return response;
     }
-    # Delete a lecturer's record by their staff number
     #
-    # + return - Successfully deleted the lecturer 
-    resource isolated function delete lecturers/[string staffNumber]() returns http:Response|error {
-        string resourcePath = string `/lecturers/${getEncodedUri(staffNumber)}`;
-        http:Response response = check self.clientEp-> delete(resourcePath);
+    # + return - Ok 
+    resource isolated function get getTeacherByEmployeeId(string employeeId) returns TeacherRecord|error {
+        string resourcePath = string `/getTeacherByEmployeeId`;
+        map<anydata> queryParam = {"employeeId": employeeId};
+        resourcePath = resourcePath + check getPathForQueryParam(queryParam);
+        TeacherRecord response = check self.clientEp->get(resourcePath);
         return response;
     }
-    # Retrieve all lecturers that teach a certain course
     #
-    # + return - List of lecturers teaching the course 
-    resource isolated function get lecturers/courses/[string courseCode]() returns Lecturer[]|error {
-        string resourcePath = string `/lecturers/courses/${getEncodedUri(courseCode)}`;
-        Lecturer[] response = check self.clientEp->get(resourcePath);
+    # + return - Ok 
+    resource isolated function delete deleteTeacherByEmployeeId(string employeeId) returns string|error {
+        string resourcePath = string `/deleteTeacherByEmployeeId`;
+        map<anydata> queryParam = {"employeeId": employeeId};
+        resourcePath = resourcePath + check getPathForQueryParam(queryParam);
+        string response = check self.clientEp-> delete(resourcePath);
         return response;
     }
-    # Retrieve all lecturers that sit in the same office
     #
-    # + return - List of lecturers in the same office 
-    resource isolated function get lecturers/offices/[string officeNumber]() returns Lecturer[]|error {
-        string resourcePath = string `/lecturers/offices/${getEncodedUri(officeNumber)}`;
-        Lecturer[] response = check self.clientEp->get(resourcePath);
+    # + return - Ok 
+    resource isolated function get getTeachersInSameOffice(string officeNumber) returns TeacherRecord[]|error {
+        string resourcePath = string `/getTeachersInSameOffice`;
+        map<anydata> queryParam = {"officeNumber": officeNumber};
+        resourcePath = resourcePath + check getPathForQueryParam(queryParam);
+        TeacherRecord[] response = check self.clientEp->get(resourcePath);
+        return response;
+    }
+    #
+    # + return - Ok 
+    resource isolated function get getTeachersTeachingCourse(string courseName) returns TeacherRecord[]|error {
+        string resourcePath = string `/getTeachersTeachingCourse`;
+        map<anydata> queryParam = {"courseName": courseName};
+        resourcePath = resourcePath + check getPathForQueryParam(queryParam);
+        TeacherRecord[] response = check self.clientEp->get(resourcePath);
         return response;
     }
 }
+
